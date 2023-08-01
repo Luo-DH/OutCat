@@ -25,13 +25,23 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew app:assembleRelease
-
-      - name: Upload apk to pgyer.com
-        run: find ${{ github.workspace }}/app/build/outputs/apk/release/ -name "*.apk*" -type f -exec curl -F "file=@{}" -F "uKey=${{ secrets.PGYER_UKEY }}" -F "_api_key=${{ secrets.PGYER_API_KEY }}" https://upload.pgyer.com/apiv1/app/upload  \;
-
       - name: Upload apk to artifact
         uses: actions/upload-artifact@master
         if: always()
         with:
           name: lottery_app
           path: ${{ github.workspace }}/app/build/outputs/apk/release/*.apk
+          
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.TOKEN }}
+          file: app/build/outputs/apk/release/*.apk
+          tag: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+          body: ""
+  
+        
+  
