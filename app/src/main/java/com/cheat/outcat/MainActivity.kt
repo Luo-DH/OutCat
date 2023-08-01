@@ -1,5 +1,6 @@
 package com.cheat.outcat
 
+import android.app.DatePickerDialog
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,7 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
@@ -18,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ServiceCompat.stopForeground
+import com.cheat.outcat.base.DisplayMetricsUtils
 import com.cheat.outcat.service.OutCatService
 import com.cheat.outcat.util.isAccessibilitySettingsOn
 import com.hjq.permissions.OnPermissionCallback
@@ -56,19 +59,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btn3)?.setOnClickListener {
-        XXPermissions.with(this)
-            .permission(Permission.SYSTEM_ALERT_WINDOW)
-            .request { permissions, allGranted ->
-                Toast.makeText(
-                    baseContext,
-                    "${allGranted}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                if (allGranted) {
+            XXPermissions.with(this)
+                .permission(Permission.SYSTEM_ALERT_WINDOW)
+                .request { permissions, allGranted ->
+                    Toast.makeText(
+                        baseContext,
+                        "${allGranted}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    if (allGranted) {
+                    }
                 }
-            }
         }
 
+
+        findViewById<Button>(R.id.btn4)?.setOnClickListener {
+            DatePickerDialog(this).show()
+        }
     }
 
     override fun onResume() {

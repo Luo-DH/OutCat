@@ -40,5 +40,6 @@
         android:id="@+id/btn4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="申请通知栏监听权限" />
+        android:text="选择日期" />
+
 </LinearLayout>
