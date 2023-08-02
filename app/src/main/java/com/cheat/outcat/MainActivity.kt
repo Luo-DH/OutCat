@@ -5,33 +5,36 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.app.ServiceCompat.stopForeground
-import com.cheat.outcat.base.DisplayMetricsUtils
+import com.cheat.outcat.base.Global
 import com.cheat.outcat.service.OutCatService
 import com.cheat.outcat.util.isAccessibilitySettingsOn
-import com.hjq.permissions.OnPermissionCallback
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 
 
 class MainActivity : AppCompatActivity() {
 
-    // 是否开启无障碍模式
-    private var mTvIsAccessibilitySettingsOn: TextView? = null
+
+    // 申请权限
+    private var mBtnReqPermissions: Button? = null
+    // 点击输入价格
+    private var mBtnSetPrice: Button? = null
+    // 日期选择的chipGroup
+    private var mDateChipGroup: ChipGroup? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,15 +42,23 @@ class MainActivity : AppCompatActivity() {
 
         initView()
 
+        setupClickListener()
+
+        setupListener()
+
 //        showWindow()
     }
 
     private fun initView() {
-        mTvIsAccessibilitySettingsOn = findViewById(R.id.tv)
+        mBtnReqPermissions = findViewById(R.id.main_req_permission)
 
-        findViewById<Button>(R.id.btn)?.setOnClickListener {
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            startActivity(intent)
+        mBtnSetPrice = findViewById(R.id.main_set_price)
+
+        mDateChipGroup = findViewById(R.id.main_chip_date)
+
+        val chip = findViewById<Chip>(R.id.chip_1)
+        chip?.setOnClickListener {
+            val a = 1
         }
 
         findViewById<Button>(R.id.btn2)?.setOnClickListener {
@@ -58,38 +69,89 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-        findViewById<Button>(R.id.btn3)?.setOnClickListener {
-            XXPermissions.with(this)
-                .permission(Permission.SYSTEM_ALERT_WINDOW)
-                .request { permissions, allGranted ->
-                    Toast.makeText(
-                        baseContext,
-                        "${allGranted}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    if (allGranted) {
-                    }
-                }
-        }
-
 
         findViewById<Button>(R.id.btn4)?.setOnClickListener {
-            DatePickerDialog(this).show()
+            val datePickerDialog = DatePickerDialog(this)
+            datePickerDialog.setOnDateSetListener { view, year, month, dayOfMonth ->
+                val chipView = Chip(this)
+                chipView.isCheckedIconVisible = true
+                chipView.checkedIcon = resources.getDrawable(com.google.android.material.R.drawable.ic_arrow_back_black_24)
+                chipView.isCheckable = true
+                chipView.isChecked = true
+                chipView.text = "$year-$month-$dayOfMonth"
+                mDateChipGroup?.addView(chipView)
+
+                val size = mDateChipGroup?.checkedChipIds?.size ?: -1
+                Toast.makeText(this, "${size}", Toast.LENGTH_SHORT).show()
+
+            }
+            datePickerDialog.show()
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        checkPerm()
-    }
+    private fun setupClickListener() {
+        mBtnReqPermissions?.setOnClickListener {
 
-    private fun checkPerm() {
-        if (isAccessibilitySettingsOn(OutCatService::class.java)) {
-            mTvIsAccessibilitySettingsOn?.text = "已开启无障碍模式"
-        } else {
-            mTvIsAccessibilitySettingsOn?.text = "无障碍模式未开启"
+            // 判断权限，如果已经申请了，toast提示
+            if (hadFloatingWindowPermission() && hadAccessibilitySettingsOn()) {
+                Toast.makeText(Global.getContext(), "权限都有了", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // 弹窗提醒，危险权限
+            MaterialAlertDialogBuilder(this)
+                .setTitle("权限申请")
+                .setMessage("程序需要获取无障碍服务以及悬浮窗权限\n##拒绝后无法使用该辅助")
+                .setNeutralButton("取消") { dialog, which ->
+                    // Respond to neutral button press
+                }
+                .setNegativeButton("拒绝") { dialog, which ->
+                    // Respond to negative button press
+                }
+                .setPositiveButton("同意") { dialog, which ->
+                    // Respond to positive button press
+                    if (!hadAccessibilitySettingsOn()) {
+                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                        startActivity(intent)
+                    }
+                    if (!hadFloatingWindowPermission()) {
+                        XXPermissions.with(this)
+                            .permission(Permission.SYSTEM_ALERT_WINDOW)
+                            .request { permissions, allGranted ->
+                                Toast.makeText(
+                                    baseContext,
+                                    "${allGranted}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                if (allGranted) {
+                                }
+                            }
+                    }
+                }
+                .show()
+
         }
 
+        mBtnSetPrice?.setOnClickListener {
+
+        }
+    }
+
+    private fun setupListener() {
+        mDateChipGroup?.setOnCheckedStateChangeListener { group, checkedIds ->
+            Toast.makeText(this, "${checkedIds.size}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * 是否获取了悬浮窗权限
+     */
+    private fun hadFloatingWindowPermission(): Boolean {
+        return Settings.canDrawOverlays(Global.getContext())
+    }
+
+    private fun hadAccessibilitySettingsOn(): Boolean {
+        return isAccessibilitySettingsOn(OutCatService::class.java)
     }
 
     private var overlayView: View? = null
