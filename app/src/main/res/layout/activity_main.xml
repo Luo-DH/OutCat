@@ -25,14 +25,14 @@
         android:id="@+id/btn2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="打开首页" />
+        android:text="打开大麦" />
 
     <Button
         style="@style/Widget.Material3.Button.ElevatedButton"
         android:id="@+id/btn4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="选择日期" />
+        android:text="添加日期" />
 
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"
