@@ -5,10 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:padding="10dp"
     tools:context=".MainActivity">
 
 
     <Button
+        style="@style/Widget.Material3.Button.ElevatedButton"
         android:id="@+id/main_req_permission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,12 +21,14 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
+        style="@style/Widget.Material3.Button.ElevatedButton"
         android:id="@+id/btn2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="打开首页" />
 
     <Button
+        style="@style/Widget.Material3.Button.ElevatedButton"
         android:id="@+id/btn4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -51,7 +55,6 @@
 
 
     <com.google.android.material.textfield.TextInputLayout
-        android:padding="10dp"
         android:id="@+id/main_text_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
