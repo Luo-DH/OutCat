@@ -96,6 +96,13 @@ class MainActivity : AppCompatActivity() {
                 chipView.isCheckable = true
                 chipView.isChecked = true
                 chipView.text = "$year-$month-$dayOfMonth"
+                chipView.setOnClickListener {
+                    if (!chipView.isChecked) {
+                        OutCatDataCenter.mSelectedDateList.remove(chipView.text)
+                    }
+                }
+                OutCatDataCenter.mAllDateList.add(chipView.text.toString())
+                OutCatDataCenter.mSelectedDateList.add(chipView.text.toString())
                 mDateChipGroup?.addView(chipView)
 
                 val size = mDateChipGroup?.checkedChipIds?.size ?: -1
@@ -161,6 +168,13 @@ class MainActivity : AppCompatActivity() {
                 chipView.isCheckable = true
                 chipView.isChecked = true
                 chipView.text = "${price}元"
+                chipView.setOnClickListener {
+                    if (!chipView.isChecked) {
+                        OutCatDataCenter.mSelectedPriceList.remove(price)
+                    }
+                }
+                OutCatDataCenter.mAllPriceList.add(price)
+                OutCatDataCenter.mSelectedPriceList.add(price)
                 mPriceChipGroup?.addView(chipView)
 
             } catch (e: Exception) {
@@ -172,7 +186,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupListener() {
         mDateChipGroup?.setOnCheckedStateChangeListener { group, checkedIds ->
-            Toast.makeText(this, "${checkedIds.size}", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this, "${checkedIds}", Toast.LENGTH_SHORT).show()
+        }
+        mPriceChipGroup?.setOnCheckedStateChangeListener { group, checkedIds ->
+//            Toast.makeText(this, "${checkedIds}", Toast.LENGTH_SHORT).show()
         }
     }
 
