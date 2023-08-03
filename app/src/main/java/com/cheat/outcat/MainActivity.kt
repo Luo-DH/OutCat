@@ -33,6 +33,12 @@ class MainActivity : AppCompatActivity() {
     // 申请权限
     private var mBtnReqPermissions: Button? = null
 
+    // 打开大麦首页
+    private var mBtnOpenDaMai: Button? = null
+
+    // 点击添加日期
+    private var mBtnAddDate: Button? = null
+
     // 日期选择的chipGroup
     private var mDateChipGroup: ChipGroup? = null
 
@@ -64,8 +70,15 @@ class MainActivity : AppCompatActivity() {
 
         mInputLayout = findViewById(R.id.main_text_field)
 
+        mBtnOpenDaMai = findViewById(R.id.main_btn_open_damai)
 
-        findViewById<Button>(R.id.btn2)?.setOnClickListener {
+        mBtnAddDate = findViewById(R.id.main_btn_add_date)
+
+    }
+
+    private fun setupClickListener() {
+
+        mBtnOpenDaMai?.setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW).apply {
                 addCategory(Intent.CATEGORY_LAUNCHER)
                 component = ComponentName("cn.damai", "cn.damai.homepage.MainActivity")
@@ -73,8 +86,7 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-
-        findViewById<Button>(R.id.btn4)?.setOnClickListener {
+        mBtnAddDate?.setOnClickListener {
             val datePickerDialog = DatePickerDialog(this)
             datePickerDialog.setOnDateSetListener { view, year, month, dayOfMonth ->
                 val chipView = Chip(this)
@@ -92,9 +104,7 @@ class MainActivity : AppCompatActivity() {
             }
             datePickerDialog.show()
         }
-    }
 
-    private fun setupClickListener() {
         mBtnReqPermissions?.setOnClickListener {
 
             // 判断权限，如果已经申请了，toast提示

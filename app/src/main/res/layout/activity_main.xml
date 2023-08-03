@@ -22,14 +22,14 @@
 
     <Button
         style="@style/Widget.Material3.Button.ElevatedButton"
-        android:id="@+id/btn2"
+        android:id="@+id/main_btn_open_damai"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="打开大麦" />
 
     <Button
         style="@style/Widget.Material3.Button.ElevatedButton"
-        android:id="@+id/btn4"
+        android:id="@+id/main_btn_add_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="添加日期" />
