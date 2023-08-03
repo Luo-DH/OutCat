@@ -22,6 +22,7 @@ import com.cheat.outcat.util.isAccessibilitySettingsOn
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputLayout
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 
@@ -31,10 +32,15 @@ class MainActivity : AppCompatActivity() {
 
     // 申请权限
     private var mBtnReqPermissions: Button? = null
-    // 点击输入价格
-    private var mBtnSetPrice: Button? = null
+
     // 日期选择的chipGroup
     private var mDateChipGroup: ChipGroup? = null
+
+    // 价格的chipGroup
+    private var mPriceChipGroup: ChipGroup? = null
+
+    // 输入价格的layout
+    private var mInputLayout: TextInputLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,14 +58,12 @@ class MainActivity : AppCompatActivity() {
     private fun initView() {
         mBtnReqPermissions = findViewById(R.id.main_req_permission)
 
-        mBtnSetPrice = findViewById(R.id.main_set_price)
-
         mDateChipGroup = findViewById(R.id.main_chip_date)
 
-        val chip = findViewById<Chip>(R.id.chip_1)
-        chip?.setOnClickListener {
-            val a = 1
-        }
+        mPriceChipGroup = findViewById(R.id.main_chip_price)
+
+        mInputLayout = findViewById(R.id.main_text_field)
+
 
         findViewById<Button>(R.id.btn2)?.setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW).apply {
@@ -75,7 +79,8 @@ class MainActivity : AppCompatActivity() {
             datePickerDialog.setOnDateSetListener { view, year, month, dayOfMonth ->
                 val chipView = Chip(this)
                 chipView.isCheckedIconVisible = true
-                chipView.checkedIcon = resources.getDrawable(com.google.android.material.R.drawable.ic_arrow_back_black_24)
+                chipView.checkedIcon =
+                    resources.getDrawable(R.drawable.baseline_check_24)
                 chipView.isCheckable = true
                 chipView.isChecked = true
                 chipView.text = "$year-$month-$dayOfMonth"
@@ -132,10 +137,28 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        mBtnSetPrice?.setOnClickListener {
+        mInputLayout?.setEndIconOnClickListener {
+            try {
+                val price = mInputLayout?.editText?.text?.toString()?.toInt()
+                    ?: return@setEndIconOnClickListener
+                Toast.makeText(this, "${price}", Toast.LENGTH_SHORT).show()
+                mInputLayout?.editText?.text?.clear()
 
+                val chipView = Chip(this)
+                chipView.isCheckedIconVisible = true
+                chipView.checkedIcon =
+                    resources.getDrawable(R.drawable.baseline_check_24)
+                chipView.isCheckable = true
+                chipView.isChecked = true
+                chipView.text = "${price}元"
+                mPriceChipGroup?.addView(chipView)
+
+            } catch (e: Exception) {
+                Toast.makeText(this, "${e}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
+
 
     private fun setupListener() {
         mDateChipGroup?.setOnCheckedStateChangeListener { group, checkedIds ->

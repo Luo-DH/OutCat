@@ -30,11 +30,10 @@
         android:layout_height="wrap_content"
         android:text="选择日期" />
 
-    <Button
-        android:id="@+id/main_set_price"
+    <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="添加价格" />
+        android:layout_height="wrap_content"/>
+
 
     <com.google.android.material.chip.ChipGroup
         android:id="@+id/main_chip_date"
@@ -44,21 +43,41 @@
         app:chipSpacingVertical="-10dp">
 
     </com.google.android.material.chip.ChipGroup>
+
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
+
+
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:padding="10dp"
+        android:id="@+id/main_text_field"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:endIconCheckable="true"
+        app:endIconMode="custom"
+        app:endIconDrawable="@drawable/baseline_send_24"
+        android:hint="请输入价格">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            />
+
+    </com.google.android.material.textfield.TextInputLayout>
     <com.google.android.material.chip.ChipGroup
+        android:id="@+id/main_chip_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:paddingHorizontal="0dp"
         app:chipSpacingVertical="-10dp">
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_1"
-            style="@style/Widget.Material3.Chip.Filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="320元" />
     </com.google.android.material.chip.ChipGroup>
+
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
 </LinearLayout>
