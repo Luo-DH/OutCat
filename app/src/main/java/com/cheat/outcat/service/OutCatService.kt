@@ -159,6 +159,9 @@ class OutCatService : AccessibilityService() {
 
         OutCatDataCenter.mSelectedDateList.forEach {
             getNodeByName(event, it).also {
+                if (it.click()) {
+                    return@forEach
+                }
                 if (it.isNotEmpty()) {
                     dateList.add(it)
                 }
@@ -188,19 +191,19 @@ class OutCatService : AccessibilityService() {
         // 点击完预售，需要点击票价，可以拿郁可唯的验证
         // 票价来搜，380/480/680/880/1080
 //        val price355 = getNodeByName(event, "355元")
-        val price380 = getNodeByName(event, "380元")
+//        val price380 = getNodeByName(event, "380元")
 //        val price480 = getNodeByName(event, "480元")
 //        val price580 = getNodeByName(event, "580元")
 //        val price655 = getNodeByName(event, "655元")
-        val price680 = getNodeByName(event, "680元")
+//        val price680 = getNodeByName(event, "680元")
 //        val price780 = getNodeByName(event, "780元")
 //        val price855 = getNodeByName(event, "855元")
-        val price880 = getNodeByName(event, "880元")
+//        val price880 = getNodeByName(event, "880元")
 //        val price980 = getNodeByName(event, "980元")
 //        val price988 = getNodeByName(event, "988元")
-        val price1080 = getNodeByName(event, "1080元")
+//        val price1080 = getNodeByName(event, "1080元")
 //        val price1155 = getNodeByName(event, "1155元")
-        val price1280 = getNodeByName(event, "1280元")
+//        val price1280 = getNodeByName(event, "1280元")
 //        val price1355 = getNodeByName(event, "1355元")
 //        val price1380 = getNodeByName(event, "1380元")
 //        val price1555 = getNodeByName(event, "1555元")
@@ -208,19 +211,19 @@ class OutCatService : AccessibilityService() {
 //        checkQueHuo(price1555, queHuoRectList) ||
 //                checkQueHuo(price1380, queHuoRectList) ||
 //                checkQueHuo(price1355, queHuoRectList) ||
-        checkQueHuo(price1280, queHuoRectList) ||
+//        checkQueHuo(price1280, queHuoRectList) ||
 //                checkQueHuo(price1155, queHuoRectList) ||
-                checkQueHuo(price1080, queHuoRectList) ||
+//                checkQueHuo(price1080, queHuoRectList) ||
 //                checkQueHuo(price988, queHuoRectList) ||
 //        checkQueHuo(price980, queHuoRectList) ||
 //                checkQueHuo(price855, queHuoRectList) ||
-                checkQueHuo(price880, queHuoRectList) ||
+//                checkQueHuo(price880, queHuoRectList) ||
 //                checkQueHuo(price780, queHuoRectList) ||
-                checkQueHuo(price680, queHuoRectList) ||
+//                checkQueHuo(price680, queHuoRectList) ||
 //                checkQueHuo(price655, queHuoRectList) ||
 //                checkQueHuo(price580, queHuoRectList) ||
 //                checkQueHuo(price480, queHuoRectList) ||
-                checkQueHuo(price380, queHuoRectList)
+//                checkQueHuo(price380, queHuoRectList)
 //                checkQueHuo(price355, queHuoRectList)
         return false
     }
