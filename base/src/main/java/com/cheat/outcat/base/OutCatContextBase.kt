@@ -2,8 +2,10 @@ package com.cheat.outcat.base
 
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
+import androidx.appcompat.app.AppCompatActivity
 import java.util.concurrent.atomic.AtomicReference
 
 object OutCatContextBase {
@@ -30,6 +32,11 @@ object OutCatContextBase {
 
     fun getDefaultMainHandler(): Handler {
         return mHandle
+    }
+
+    fun getDefaultSharePreferences(): SharedPreferences {
+        return Global.getApplicationContext()
+            .getSharedPreferences("OutCat", AppCompatActivity.MODE_PRIVATE)
     }
 
 }

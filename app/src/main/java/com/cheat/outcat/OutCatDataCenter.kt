@@ -8,8 +8,8 @@ object OutCatDataCenter {
 
     val mAllDateList: LinkedList<String> = LinkedList()
 
-    val mSelectedPriceList: LinkedList<Int> = LinkedList()
+    val mSelectedPriceList: LinkedList<String> = LinkedList()
 
-    val mAllPriceList: LinkedList<Int> = LinkedList()
+    val mAllPriceList: LinkedList<String> = LinkedList()
 
 }

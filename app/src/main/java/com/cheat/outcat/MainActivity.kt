@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.cheat.outcat.base.Global
+import com.cheat.outcat.base.OutCatContextBase
 import com.cheat.outcat.service.OutCatService
 import com.cheat.outcat.util.isAccessibilitySettingsOn
 import com.google.android.material.chip.Chip
@@ -25,6 +26,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import java.lang.StringBuilder
 
 
 class MainActivity : AppCompatActivity() {
@@ -59,6 +61,7 @@ class MainActivity : AppCompatActivity() {
         setupListener()
 
 //        showWindow()
+        dealHistoryData()
     }
 
     private fun initView() {
@@ -89,18 +92,7 @@ class MainActivity : AppCompatActivity() {
         mBtnAddDate?.setOnClickListener {
             val datePickerDialog = DatePickerDialog(this)
             datePickerDialog.setOnDateSetListener { view, year, month, dayOfMonth ->
-                val chipView = Chip(this)
-                chipView.isCheckedIconVisible = true
-                chipView.checkedIcon =
-                    resources.getDrawable(R.drawable.baseline_check_24)
-                chipView.isCheckable = true
-                chipView.isChecked = true
-                chipView.text = "$year-$month-$dayOfMonth"
-                chipView.setOnClickListener {
-                    if (!chipView.isChecked) {
-                        OutCatDataCenter.mSelectedDateList.remove(chipView.text)
-                    }
-                }
+                val chipView = generateChip("$year-$month-$dayOfMonth")
                 OutCatDataCenter.mAllDateList.add(chipView.text.toString())
                 OutCatDataCenter.mSelectedDateList.add(chipView.text.toString())
                 mDateChipGroup?.addView(chipView)
@@ -108,6 +100,8 @@ class MainActivity : AppCompatActivity() {
                 val size = mDateChipGroup?.checkedChipIds?.size ?: -1
                 Toast.makeText(this, "${size}", Toast.LENGTH_SHORT).show()
 
+                // 记录在sp中
+                recordDateDataToSp()
             }
             datePickerDialog.show()
         }
@@ -158,24 +152,15 @@ class MainActivity : AppCompatActivity() {
             try {
                 val price = mInputLayout?.editText?.text?.toString()?.toInt()
                     ?: return@setEndIconOnClickListener
-                Toast.makeText(this, "${price}", Toast.LENGTH_SHORT).show()
                 mInputLayout?.editText?.text?.clear()
 
-                val chipView = Chip(this)
-                chipView.isCheckedIconVisible = true
-                chipView.checkedIcon =
-                    resources.getDrawable(R.drawable.baseline_check_24)
-                chipView.isCheckable = true
-                chipView.isChecked = true
-                chipView.text = "${price}元"
-                chipView.setOnClickListener {
-                    if (!chipView.isChecked) {
-                        OutCatDataCenter.mSelectedPriceList.remove(price)
-                    }
-                }
-                OutCatDataCenter.mAllPriceList.add(price)
-                OutCatDataCenter.mSelectedPriceList.add(price)
+                val chipView = generateChip("${price}元")
+
+                OutCatDataCenter.mAllPriceList.add("${price}元")
+                OutCatDataCenter.mSelectedPriceList.add("${price}元")
                 mPriceChipGroup?.addView(chipView)
+
+                recordPriceDataToSp()
 
             } catch (e: Exception) {
                 Toast.makeText(this, "${e}", Toast.LENGTH_SHORT).show()
@@ -183,6 +168,78 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun generateChip(
+        text: String
+    ): Chip {
+        val chipView = Chip(this)
+        chipView.isCheckedIconVisible = true
+        chipView.checkedIcon =
+            resources.getDrawable(R.drawable.baseline_check_24)
+        chipView.isCheckable = true
+        chipView.isChecked = true
+        chipView.text = text
+        chipView.setOnClickListener {
+            if (!chipView.isChecked) {
+                OutCatDataCenter.mSelectedDateList.remove(chipView.text)
+                OutCatDataCenter.mSelectedPriceList.remove(chipView.text)
+
+                deleteHistoryFromSp(text)
+            }
+        }
+        chipView.setOnLongClickListener {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("删除")
+                .setMessage("确定要删除该条目吗")
+                .setNeutralButton("取消") { dialog, which ->
+                }
+                .setPositiveButton("删除") { dialog, which ->
+                    mDateChipGroup?.removeView(chipView)
+
+                    OutCatDataCenter.mSelectedDateList.remove(chipView.text)
+                    OutCatDataCenter.mSelectedPriceList.remove(chipView.text)
+
+
+                    deleteHistoryFromSp(text)
+                }
+                .show()
+
+            true
+        }
+        return chipView
+    }
+
+    private fun deleteHistoryFromSp(text: String) {
+        val sp = OutCatContextBase.getDefaultSharePreferences()
+        val historyList = sp.getString("dateList", "")
+        if (historyList?.contains("$text,") == true) {
+            val newList = historyList.removeSuffix("$text,")
+            sp.edit().putString("dateList", newList).apply()
+        }
+
+        val historyPriceList = sp.getString("priceList", "")
+        if (historyPriceList?.contains("$text,") == true) {
+            val newList = historyPriceList.removeSuffix("$text,")
+            sp.edit().putString("priceList", newList).apply()
+        }
+    }
+
+    private fun recordPriceDataToSp() {
+        val sp = OutCatContextBase.getDefaultSharePreferences()
+        val listStr = StringBuilder()
+        OutCatDataCenter.mSelectedPriceList.forEach {
+            listStr.append("$it,")
+        }
+        sp.edit().putString("priceList", listStr.toString()).apply()
+    }
+
+    private fun recordDateDataToSp() {
+        val sp = OutCatContextBase.getDefaultSharePreferences()
+        val listStr = StringBuilder()
+        OutCatDataCenter.mSelectedDateList.forEach {
+            listStr.append("$it,")
+        }
+        sp.edit().putString("dateList", listStr.toString()).apply()
+    }
 
     private fun setupListener() {
         mDateChipGroup?.setOnCheckedStateChangeListener { group, checkedIds ->
@@ -203,6 +260,42 @@ class MainActivity : AppCompatActivity() {
     private fun hadAccessibilitySettingsOn(): Boolean {
         return isAccessibilitySettingsOn(OutCatService::class.java)
     }
+
+    /**
+     * 处理历史数据
+     */
+    private fun dealHistoryData() {
+        val sp = OutCatContextBase.getDefaultSharePreferences()
+        val dateListStr = sp.getString("dateList", "")
+        val dateList = dateListStr?.split(",") ?: emptyList()
+        if (dateList.isNotEmpty()) {
+            dateList.forEach {
+                if (it != "") {
+                    mDateChipGroup?.addView(
+                        generateChip(it)
+                    )
+                    OutCatDataCenter.mAllDateList.add(it)
+                    OutCatDataCenter.mSelectedDateList.add(it)
+                }
+            }
+        }
+
+        val priceListStr = sp.getString("priceList", "")
+        val priceList = priceListStr?.split(",") ?: emptyList()
+
+        if (priceList.isNotEmpty()) {
+            priceList.forEach {
+                if (it != "") {
+                    mPriceChipGroup?.addView(
+                        generateChip(it)
+                    )
+                    OutCatDataCenter.mAllPriceList.add(it)
+                    OutCatDataCenter.mSelectedPriceList.add(it)
+                }
+            }
+        }
+    }
+
 
     private var overlayView: View? = null
     private var mWindowManager: WindowManager? = null
