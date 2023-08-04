@@ -92,7 +92,17 @@ class MainActivity : AppCompatActivity() {
         mBtnAddDate?.setOnClickListener {
             val datePickerDialog = DatePickerDialog(this)
             datePickerDialog.setOnDateSetListener { view, year, month, dayOfMonth ->
-                val chipView = generateChip("$year-$month-$dayOfMonth")
+                val monthStr = if (month < 10) {
+                    "0${month}"
+                } else {
+                    month.toString()
+                }
+                val dayStr = if (dayOfMonth < 10) {
+                    "0${dayOfMonth}"
+                } else {
+                    dayOfMonth.toString()
+                }
+                val chipView = generateChip("$year-$monthStr-$dayStr")
                 OutCatDataCenter.mAllDateList.add(chipView.text.toString())
                 OutCatDataCenter.mSelectedDateList.add(chipView.text.toString())
                 mDateChipGroup?.addView(chipView)
@@ -194,6 +204,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 .setPositiveButton("删除") { dialog, which ->
                     mDateChipGroup?.removeView(chipView)
+                    mPriceChipGroup?.removeView(chipView)
 
                     OutCatDataCenter.mSelectedDateList.remove(chipView.text)
                     OutCatDataCenter.mSelectedPriceList.remove(chipView.text)

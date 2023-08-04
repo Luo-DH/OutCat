@@ -28,6 +28,7 @@ import com.cheat.outcat.ID_BACK
 import com.cheat.outcat.ID_BUY
 import com.cheat.outcat.ID_YUYUE
 import com.cheat.outcat.MainActivity
+import com.cheat.outcat.OutCatDataCenter
 import com.cheat.outcat.PAGE_YUYUE
 import com.cheat.outcat.PAGE_MAIN_FEATURED
 import com.cheat.outcat.PAGE_SEARCH
@@ -75,26 +76,6 @@ class OutCatService : AccessibilityService() {
             "androidx.viewpager.widget.ViewPager" -> return
             else -> {}
         }
-//        Log.i(TAG, "onAccessibilityEvent: time: *******************************")
-//        val yuYue: Boolean
-//        val yuYueTime = measureTimeMillis {
-//            yuYue = handleYuYue(event)
-//        }
-//        Log.i(TAG, "onAccessibilityEvent: time: yuYue:${yuYueTime} ${event.className}")
-//        if (!yuYue) {
-//            val empty: Boolean
-//            val emptyTime = measureTimeMillis {
-//                empty = handleEmptyTick(event)
-//            }
-//            Log.i(TAG, "onAccessibilityEvent: time: empty:${emptyTime} ${event.className}")
-//            if (!empty) {
-//                val select: Boolean
-//                val selectTime = measureTimeMillis {
-//                    select = handleSelect(event)
-//                }
-//                Log.i(TAG, "onAccessibilityEvent: time: select:${selectTime} ${event.className}")
-//            }
-//        }
         handleYuYue(event) || handleEmptyTick(event) || handleSelect(event) || handleOrder(event)
     }
 
@@ -176,17 +157,13 @@ class OutCatService : AccessibilityService() {
 
         val dateList = ArrayList<List<AccessibilityNodeInfo>>()
 
-
-        getNodeByName(event, "2023-10-28").also {
-            if (it.isNotEmpty()) {
-                dateList.add(it)
+        OutCatDataCenter.mSelectedDateList.forEach {
+            getNodeByName(event, it).also {
+                if (it.isNotEmpty()) {
+                    dateList.add(it)
+                }
             }
         }
-//        getNodeByName(event, "2023-08-19").also {
-//            if (it.isNotEmpty()) {
-//                dateList.add(it)
-//            }
-//        }
 
         if (noTickList.size >= dateList.size) {
             return getNodeById(event, ID_BACK).click()
@@ -199,6 +176,13 @@ class OutCatService : AccessibilityService() {
             val rect = Rect()
             it.parent.getBoundsInParent(rect)
             queHuoRectList.add(rect)
+        }
+
+        OutCatDataCenter.mSelectedPriceList.forEach {
+            val que = checkQueHuo(getNodeByName(event, it), queHuoRectList)
+            if (que) {
+                return@forEach
+            }
         }
 
         // 点击完预售，需要点击票价，可以拿郁可唯的验证
