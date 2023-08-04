@@ -92,10 +92,10 @@ class MainActivity : AppCompatActivity() {
         mBtnAddDate?.setOnClickListener {
             val datePickerDialog = DatePickerDialog(this)
             datePickerDialog.setOnDateSetListener { view, year, month, dayOfMonth ->
-                val monthStr = if (month < 10) {
-                    "0${month}"
+                val monthStr = if (month+1 < 10) {
+                    "0${month+1}"
                 } else {
-                    month.toString()
+                    (month+1).toString()
                 }
                 val dayStr = if (dayOfMonth < 10) {
                     "0${dayOfMonth}"
