@@ -29,6 +29,7 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
         <activity
+            android:launchMode="singleInstance"
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

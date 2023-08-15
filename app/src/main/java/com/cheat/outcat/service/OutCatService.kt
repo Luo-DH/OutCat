@@ -18,6 +18,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.TextView
 import android.widget.Toast
@@ -31,10 +32,15 @@ import com.cheat.outcat.MainActivity
 import com.cheat.outcat.OutCatDataCenter
 import com.cheat.outcat.PAGE_YUYUE
 import com.cheat.outcat.PAGE_MAIN_FEATURED
+import com.cheat.outcat.PAGE_ORDER
+import com.cheat.outcat.PAGE_ORDER_LOADING_DIALOG
 import com.cheat.outcat.PAGE_SEARCH
+import com.cheat.outcat.PAGE_SEARCH_LOADING_DIALOG
 import com.cheat.outcat.PAGE_SELECT
+import com.cheat.outcat.PAGE_SELECT_LOADING_DIALOG
 import com.cheat.outcat.R
 import com.cheat.outcat.base.DisplayMetricsUtils
+import com.cheat.outcat.base.OutCatContextBase
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
 import kotlin.system.measureNanoTime
@@ -58,68 +64,139 @@ class OutCatService : AccessibilityService() {
     @Volatile
     private var currentPage = ""
 
+    private var mPage = ""
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-//        Log.i(TAG, "onAccessibilityEvent: ${event}")
-        event ?: return
-        event.source ?: return
-
-        // 记录当前所在页面
-        when (event.className) {
-            PAGE_MAIN_FEATURED -> currentPage = PAGE_MAIN_FEATURED
-            PAGE_SEARCH -> currentPage = PAGE_SEARCH
-
-            PAGE_YUYUE -> currentPage = PAGE_YUYUE
-            PAGE_SELECT -> currentPage = PAGE_SELECT
-            "cn.damai.common.app.widget.DMProgressDialog" -> return
-//            "android.view.ViewGroup" -> return
-            "android.widget.ScrollView" -> return
-            "androidx.viewpager.widget.ViewPager" -> return
-            else -> {}
+        Log.i(TAG, "onAccessibilityEvent: ${event}")
+        if (!OutCatDataCenter.start) {
+            return
         }
-        handleYuYue(event) || handleEmptyTick(event) || handleSelect(event) || handleOrder(event)
+        event ?: return
+
+        if (event.eventType == TYPE_WINDOW_STATE_CHANGED) {
+            currentPage = event.className.toString()
+        }
+
+        when (event.className) {
+            PAGE_YUYUE -> {
+                val cast = measureTimeMillis {
+                    handleYuYue(event)
+                }
+                Log.i(TAG, "vansing onAccessibilityEvent: handleYuYue:${cast}")
+            }
+
+            PAGE_SELECT -> {
+                val cast = measureTimeMillis {
+                    handleSelect(event)
+                }
+                Log.i(TAG, "vansing onAccessibilityEvent: handleSelect:${cast}")
+            }
+
+            PAGE_ORDER -> {
+                val cast = measureTimeMillis {
+                    handleOrder(event)
+                }
+                Log.i(TAG, "vansing onAccessibilityEvent: handleOrder:${cast}")
+            }
+        }
+
+        if (event.eventType == TYPE_WINDOW_STATE_CHANGED) {
+            mPage = event.className.toString()
+        }
+
     }
 
 
     // 预约那个页面
-    private fun handleYuYue(event: AccessibilityEvent): Boolean {
+    private fun handleYuYue(event: AccessibilityEvent) {
 
         // 不在当前页面直接return
         if (currentPage != PAGE_YUYUE) {
-            return false
+            return
         }
         // 预约抢票
-        return getNodeById(event, ID_YUYUE).click() ||
+        getNodeById(event, ID_YUYUE).click() ||
                 getNodeByName(event, "预约抢票").click() ||
                 getNodeByName(event, "立即购买").click() ||
                 getNodeByName(event, "立即预定").click()
+        return
 
     }
 
     // 选票的页面
-    private fun handleSelect(event: AccessibilityEvent): Boolean {
+    private fun handleSelect(event: AccessibilityEvent) {
         // 不在当前页面直接return
         if (currentPage != PAGE_SELECT) {
-            return false
+            return
         }
 
-        // 找一下“确认”按钮  立即购买 立即预定 确认
-        return (getNodeById(event, ID_BUY)).run { this.click() } ||
-                (getNodeByName(event, "立即购买")).run { this.click() } ||
-                (getNodeByName(event, "立即预定")).run { this.click() } ||
-                (getNodeByName(event, "确认")).run { this.click() } ||
-                (getNodeByName(event, "确定")).run { this.click() }
+        // 上一个页面不是加载页面，直接return
+        if (mPage != PAGE_SELECT_LOADING_DIALOG &&
+            mPage != PAGE_SEARCH_LOADING_DIALOG && mPage != PAGE_YUYUE
+        ) {
+            return
+        }
+
+        // 选择票价
+        var res = false
+
+        // 选日期
+        OutCatDataCenter.mSelectedDateList.forEach {
+            getNodeByName(event, it).also {
+                if (it.click()) {
+                    return@forEach
+                }
+            }
+        }
+
+        // 拿到所有缺货登记的坐标
+        val queHuoList = getNodeByName(event, "缺货登记")
+        val queHuoRectList = ArrayList<Rect>()
+        queHuoList.forEach {
+            val rect = Rect()
+            it.parent.getBoundsInParent(rect)
+            queHuoRectList.add(rect)
+        }
+
+        OutCatDataCenter.mSelectedPriceList.forEach {
+            val que = checkQueHuo(getNodeByName(event, it), queHuoRectList)
+            if (que) {
+                res = true
+                return@forEach
+            }
+        }
+        if (!res) {
+            getNodeById(event, ID_BACK).click()
+        } else {
+            res = (getNodeById(event, ID_BUY)).run { this.click() } ||
+                    (getNodeByName(event, "立即购买")).run { this.click() } ||
+                    (getNodeByName(event, "立即预定")).run { this.click() } ||
+                    (getNodeByName(event, "确认")).run { this.click() } ||
+                    (getNodeByName(event, "确定")).run { this.click() }
+            if (!res) {
+                getNodeById(event, ID_BACK).click()
+            }
+        }
     }
 
     // 提交订单
-    private fun handleOrder(event: AccessibilityEvent): Boolean {
+    private fun handleOrder(event: AccessibilityEvent) {
         // 不在当前页面直接return
-        if (currentPage != PAGE_SELECT) {
-            return false
+        if (currentPage != PAGE_ORDER) {
+            return
         }
-        return (getNodeById(event, ID_BUY)).run { this.click() } ||
+        if (mPage != PAGE_ORDER_LOADING_DIALOG) {
+            return
+        }
+        var res = false
+        res = (getNodeById(event, ID_BUY)).run { this.click() } ||
                 (getNodeByName(event, "提交订单")).run { this.click() } ||
                 (getNodeByName(event, "确认")).run { this.click() } ||
                 (getNodeByName(event, "确定")).run { this.click() }
+        if (!res) {
+            getNodeById(event, ID_BACK).click()
+        }
+        return
     }
 
     // 处理无票的情况，抢余票

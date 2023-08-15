@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -60,7 +61,7 @@ class MainActivity : AppCompatActivity() {
 
         setupListener()
 
-//        showWindow()
+        showWindow()
         dealHistoryData()
     }
 
@@ -149,6 +150,7 @@ class MainActivity : AppCompatActivity() {
                                     "${allGranted}",
                                     Toast.LENGTH_SHORT
                                 ).show()
+                                showWindow()
                                 if (allGranted) {
                                 }
                             }
@@ -319,7 +321,7 @@ class MainActivity : AppCompatActivity() {
             overlayView =
                 (getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(
                     R.layout.float_app_view, null
-                ) as ConstraintLayout
+                ) as LinearLayout
             // 设置悬浮窗口参数
             val flag =
                 (WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN)
@@ -330,15 +332,29 @@ class MainActivity : AppCompatActivity() {
                 flag,
                 PixelFormat.TRANSLUCENT
             )
-            val tvSwitch = overlayView?.findViewById<TextView>(R.id.tv_switch)
+            val tvSwitch = overlayView?.findViewById<Button>(R.id.tv_switch)
             tvSwitch?.setOnClickListener {
+                OutCatDataCenter.start = !OutCatDataCenter.start
+                OutCatDataCenter.mListener?.invoke()
+                if (OutCatDataCenter.start) {
+                    tvSwitch.text = "点击停止"
+                } else {
+                    tvSwitch.text = "点击开始"
+                }
 //                stopForeground(true)
 //                mWindowManager?.removeView(overlayView)
 //                stopSelf()
 //                isStop = true
             }
+            val btnOpenApp = overlayView?.findViewById<Button>(R.id.tv_go_to_app)
+            btnOpenApp?.setOnClickListener {
+                startActivity(Intent(Intent.ACTION_VIEW).apply {
+                    addCategory(Intent.CATEGORY_LAUNCHER)
+                    component = ComponentName("com.cheat.outcat", "com.cheat.outcat.MainActivity")
+                })
+            }
             // 设置窗口布局的位置和大小
-            params.gravity = Gravity.END or Gravity.TOP
+            params.gravity = Gravity.END or Gravity.CENTER
             // 将悬浮窗口 View 添加到 WindowManager 中
             mWindowManager?.addView(overlayView, params)
         }

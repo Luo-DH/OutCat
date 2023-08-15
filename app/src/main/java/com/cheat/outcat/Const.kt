@@ -11,9 +11,18 @@ val PAGE_YUYUE = "cn.damai.trade.newtradeorder.ui.projectdetail.ui.activity.Proj
 // 选择场次和确认订单都在这里
 val PAGE_SELECT = "cn.damai.commonbusiness.seatbiz.sku.qilin.ui.NcovSkuActivity"
 
+val PAGE_SELECT_LOADING_DIALOG = "cn.damai.common.app.widget.DMProgressDialog"
+
+// 提交订单页面
+val PAGE_ORDER = "cn.damai.ultron.view.activity.DmOrderActivity"
+
+val PAGE_ORDER_LOADING_DIALOG = "cn.damai.ultron.utils.DmUltronProgressDialog"
 
 // 搜索后的页面
 val PAGE_SEARCH = "cn.damai.search.v2.SearchActivity"
+
+// 搜索的加载页面
+val PAGE_SEARCH_LOADING_DIALOG = "cn.damai.common.app.widget.DMProgressDialogV2"
 
 val ID_YUYUE = "cn.damai:id/tv_left_main_text"
 

@@ -12,4 +12,10 @@ object OutCatDataCenter {
 
     val mAllPriceList: LinkedList<String> = LinkedList()
 
+    var mListener: (() -> Unit)? = null
+    fun setClickListener(listener: (() -> Unit)?) {
+        mListener = listener
+    }
+
+    var start = true
 }
