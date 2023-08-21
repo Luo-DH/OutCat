@@ -74,7 +74,6 @@
         android:id="@+id/main_chip_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
         android:paddingHorizontal="0dp"
         app:chipSpacingVertical="-10dp">
     </com.google.android.material.chip.ChipGroup>
