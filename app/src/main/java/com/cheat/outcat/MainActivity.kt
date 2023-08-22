@@ -70,6 +70,13 @@ class MainActivity : AppCompatActivity() {
         dealHistoryData()
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        // 检查权限，通知floatView
+        mFloatView?.checkPermission()
+    }
+
     private fun initView() {
         mBtnReqPermissions = findViewById(R.id.main_req_permission)
 
@@ -320,20 +327,23 @@ class MainActivity : AppCompatActivity() {
 
     private var mWindowManager: WindowManager? = null
     private val mLayoutParams: WindowManager.LayoutParams = WindowManager.LayoutParams()
+    private var mFloatView: FloatView? = null
     private fun showWindow() {
+        if (mFloatView != null) {
+            return
+        }
         if (mWindowManager == null) {
             // 获取 WindowManager
             mWindowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
-
             // 创建一个悬浮窗口 View
-            val floatView = FloatView(this)
-            floatView.setOnMoveListener { moveX, moveY ->
+            mFloatView = FloatView(this)
+            mFloatView?.setOnMoveListener { moveX, moveY ->
                 val targetX = mLayoutParams.x - moveX.toInt()
                 val targetY = mLayoutParams.y - moveY.toInt()
                 mLayoutParams.x = targetX
                 mLayoutParams.y = targetY
-                mWindowManager?.updateViewLayout(floatView, mLayoutParams)
+                mWindowManager?.updateViewLayout(mFloatView, mLayoutParams)
             }
 
             mLayoutParams.type = getWindowType()
@@ -346,7 +356,7 @@ class MainActivity : AppCompatActivity() {
             mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT
             mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
             mLayoutParams.format = PixelFormat.RGBA_8888
-            mWindowManager?.addView(floatView, mLayoutParams)
+            mWindowManager?.addView(mFloatView, mLayoutParams)
 
         }
     }

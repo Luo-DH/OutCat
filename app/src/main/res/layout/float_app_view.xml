@@ -3,41 +3,68 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="#eeeeee"
-    android:padding="20dp"
+    android:background="#40eeeeee"
     xmlns:tools="http://schemas.android.com/tools"
     android:clickable="false"
     android:focusable="false"
+    android:gravity="center"
+    android:padding="20dp"
     android:orientation="vertical"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <Button
-        style="@style/Widget.Material3.Button.ElevatedButton"
-        android:id="@+id/tv_switch"
-        android:focusable="false"
-        android:clickable="false"
+    <TextView
+        android:id="@+id/tv_tips"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="点击停止"
-        android:gravity="center_vertical"
+        android:textColor="#ff0000"
+        android:text="    无障碍未开启\n功能无法正常使用"
+        android:layout_gravity="center_horizontal"
         android:textSize="12dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        />
 
     <Button
-        style="@style/Widget.Material3.Button.ElevatedButton"
-        android:id="@+id/tv_go_to_app"
-        android:focusable="false"
-        android:clickable="false"
+        android:id="@+id/btn_req_per"
+        style="@style/Widget.Material3.FloatingActionButton.Large.Primary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="打开辅助"
-        android:gravity="center_vertical"
+        android:text="设置权限"
         android:textSize="12dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:orientation="vertical"
+        android:layout_height="wrap_content">
+
+        <Button
+            style="@style/Widget.Material3.Button.ElevatedButton"
+            android:id="@+id/tv_switch"
+            android:focusable="false"
+            android:clickable="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="点击停止"
+            android:gravity="center_vertical"
+            android:textSize="12dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <Button
+            style="@style/Widget.Material3.Button.ElevatedButton"
+            android:id="@+id/tv_go_to_app"
+            android:focusable="false"
+            android:clickable="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="打开辅助"
+            android:gravity="center_vertical"
+            android:textSize="12dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </LinearLayout>
 
 
 </LinearLayout>
