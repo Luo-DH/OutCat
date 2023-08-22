@@ -5,8 +5,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.DisplayMetrics
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -17,8 +20,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.cheat.outcat.base.DisplayMetricsUtils
 import com.cheat.outcat.base.Global
 import com.cheat.outcat.base.OutCatContextBase
+import com.cheat.outcat.float.FloatView
 import com.cheat.outcat.service.OutCatService
 import com.cheat.outcat.util.isAccessibilitySettingsOn
 import com.google.android.material.chip.Chip
@@ -313,53 +318,44 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private var overlayView: View? = null
     private var mWindowManager: WindowManager? = null
-
+    private val mLayoutParams: WindowManager.LayoutParams = WindowManager.LayoutParams()
     private fun showWindow() {
         if (mWindowManager == null) {
             // 获取 WindowManager
             mWindowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+
+
             // 创建一个悬浮窗口 View
-            overlayView =
-                (getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(
-                    R.layout.float_app_view, null
-                ) as LinearLayout
-            // 设置悬浮窗口参数
-            val flag =
-                (WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN)
-            val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                flag,
-                PixelFormat.TRANSLUCENT
-            )
-            val tvSwitch = overlayView?.findViewById<Button>(R.id.tv_switch)
-            tvSwitch?.setOnClickListener {
-                OutCatDataCenter.start = !OutCatDataCenter.start
-                OutCatDataCenter.mListener?.invoke()
-                if (OutCatDataCenter.start) {
-                    tvSwitch.text = "点击停止"
-                } else {
-                    tvSwitch.text = "点击开始"
-                }
-//                stopForeground(true)
-//                mWindowManager?.removeView(overlayView)
-//                stopSelf()
-//                isStop = true
+            val floatView = FloatView(this)
+            floatView.setOnMoveListener { moveX, moveY ->
+                val targetX = mLayoutParams.x - moveX.toInt()
+                val targetY = mLayoutParams.y - moveY.toInt()
+                mLayoutParams.x = targetX
+                mLayoutParams.y = targetY
+                mWindowManager?.updateViewLayout(floatView, mLayoutParams)
             }
-            val btnOpenApp = overlayView?.findViewById<Button>(R.id.tv_go_to_app)
-            btnOpenApp?.setOnClickListener {
-                startActivity(Intent(Intent.ACTION_VIEW).apply {
-                    addCategory(Intent.CATEGORY_LAUNCHER)
-                    component = ComponentName("com.cheat.outcat", "com.cheat.outcat.MainActivity")
-                })
-            }
-            // 设置窗口布局的位置和大小
-            params.gravity = Gravity.END or Gravity.CENTER
-            // 将悬浮窗口 View 添加到 WindowManager 中
-            mWindowManager?.addView(overlayView, params)
+
+            mLayoutParams.type = getWindowType()
+            mLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.or(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL).or(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+            mLayoutParams.gravity = Gravity.BOTTOM or Gravity.RIGHT // y 指的是底部边框到屏幕底部距离， x指的时右边框到右屏幕的距离
+            val r = DisplayMetrics()
+            mWindowManager?.defaultDisplay?.getMetrics(r)
+            mLayoutParams.y = 100//默认显示右下角
+            mLayoutParams.x = 100
+            mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT
+            mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
+            mLayoutParams.format = PixelFormat.RGBA_8888
+            mWindowManager?.addView(floatView, mLayoutParams)
+
+        }
+    }
+
+    fun getWindowType(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            WindowManager.LayoutParams.TYPE_TOAST
         }
     }
 
