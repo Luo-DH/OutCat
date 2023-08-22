@@ -196,6 +196,9 @@ class MainActivity : AppCompatActivity() {
                 OutCatDataCenter.mSelectedPriceList.remove(chipView.text)
 
                 deleteHistoryFromSp(text)
+            } else {
+                OutCatDataCenter.mSelectedDateList.add(chipView.text.toString())
+                OutCatDataCenter.mSelectedPriceList.add(chipView.text.toString())
             }
         }
         chipView.setOnLongClickListener {

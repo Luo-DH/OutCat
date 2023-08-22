@@ -18,6 +18,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityEvent.TYPE_VIEW_CLICKED
 import android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.TextView
@@ -66,12 +67,19 @@ class OutCatService : AccessibilityService() {
 
     private var mPage = ""
 
+    // 上次点击的文案
+    private var mLastClickText = ""
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         Log.i(TAG, "onAccessibilityEvent: ${event}")
         if (!OutCatDataCenter.start) {
             return
         }
         event ?: return
+
+        if (event.eventType == TYPE_VIEW_CLICKED) {
+            mLastClickText = event.text.toString()
+        }
 
         if (event.eventType == TYPE_WINDOW_STATE_CHANGED) {
             currentPage = event.className.toString()
@@ -137,46 +145,32 @@ class OutCatService : AccessibilityService() {
             return
         }
 
-        // 选择票价
-        var res = false
 
-        // 选日期
-        OutCatDataCenter.mSelectedDateList.forEach {
-            getNodeByName(event, it).also {
-                if (it.click()) {
-                    return@forEach
+        // 1. 选择票价
+        val selectedPrice = handlePrice(event)
+        if (selectedPrice) {
+            // 点击购买
+            handleClickBuy(event)
+            return
+        } else {
+            OutCatDataCenter.mSelectedDateList.forEach {
+                if (mLastClickText.contains(it)) {
+                    handleClickBack(event)
+                    return
                 }
             }
         }
 
-        // 拿到所有缺货登记的坐标
-        val queHuoList = getNodeByName(event, "缺货登记")
-        val queHuoRectList = ArrayList<Rect>()
-        queHuoList.forEach {
-            val rect = Rect()
-            it.parent.getBoundsInParent(rect)
-            queHuoRectList.add(rect)
+        // 2. 选择日期
+        val selectedDate = handleDate(event)
+        if (selectedDate) {
+            // 如果选上了日期，那么可以结束这次事件
+            return
+        } else {
+            // 如果没有选上日期，考虑点击返回按钮，退出当前页面
+            handleClickBack(event)
         }
 
-        OutCatDataCenter.mSelectedPriceList.forEach {
-            val que = checkQueHuo(getNodeByName(event, it), queHuoRectList)
-            if (que) {
-                res = true
-                return@forEach
-            }
-        }
-        if (!res) {
-            getNodeById(event, ID_BACK).click()
-        } else {
-            res = (getNodeById(event, ID_BUY)).run { this.click() } ||
-                    (getNodeByName(event, "立即购买")).run { this.click() } ||
-                    (getNodeByName(event, "立即预定")).run { this.click() } ||
-                    (getNodeByName(event, "确认")).run { this.click() } ||
-                    (getNodeByName(event, "确定")).run { this.click() }
-            if (!res) {
-                getNodeById(event, ID_BACK).click()
-            }
-        }
     }
 
     // 提交订单
@@ -305,6 +299,53 @@ class OutCatService : AccessibilityService() {
         return false
     }
 
+    private fun handlePrice(event: AccessibilityEvent): Boolean {
+        // 拿到所有缺货登记的坐标
+        val queHuoList = getNodeByName(event, "缺货登记")
+        val queHuoRectList = ArrayList<Rect>()
+        queHuoList.forEach {
+            val rect = Rect()
+            it.parent.getBoundsInParent(rect)
+            queHuoRectList.add(rect)
+        }
+        OutCatDataCenter.mSelectedPriceList.forEach {
+            if (checkQueHuo(getNodeByName(event, it), queHuoRectList))
+                return true
+        }
+        return false
+    }
+
+    private fun handleDate(event: AccessibilityEvent): Boolean {
+
+        // 拿到所有缺货登记的坐标
+        val noTicketList = getNodeByName(event, "无票")
+        val noTicketRectList = ArrayList<Rect>()
+        noTicketList.forEach {
+            val rect = Rect()
+            it.parent.getBoundsInScreen(rect)
+            noTicketRectList.add(rect)
+        }
+
+        OutCatDataCenter.mSelectedDateList.forEach {
+            if (checkQueHuo2(getNodeByName(event, it), noTicketRectList)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private fun handleClickBuy(event: AccessibilityEvent): Boolean {
+        return (getNodeById(event, ID_BUY)).run { this.click() } ||
+                (getNodeByName(event, "立即购买")).run { this.click() } ||
+                (getNodeByName(event, "立即预定")).run { this.click() } ||
+                (getNodeByName(event, "确认")).run { this.click() } ||
+                (getNodeByName(event, "确定")).run { this.click() }
+    }
+
+    private fun handleClickBack(event: AccessibilityEvent) {
+        getNodeById(event, ID_BACK).click()
+    }
 
     /**
      * 检查有没有不缺货的，直接点击不缺货的
@@ -313,6 +354,17 @@ class OutCatService : AccessibilityService() {
         if (a?.isNotEmpty() == true) {
             val rect = Rect()
             a.first().parent.getBoundsInParent(rect)
+            if (rect !in list) {
+                return a.first().click()
+            }
+        }
+        return false
+    }
+
+    private fun checkQueHuo2(a: List<AccessibilityNodeInfo>?, list: List<Rect>): Boolean {
+        if (a?.isNotEmpty() == true) {
+            val rect = Rect()
+            a.first().parent.getBoundsInScreen(rect)
             if (rect !in list) {
                 return a.first().click()
             }
