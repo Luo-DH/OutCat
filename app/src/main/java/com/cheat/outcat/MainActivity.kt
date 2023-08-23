@@ -95,11 +95,15 @@ class MainActivity : AppCompatActivity() {
     private fun setupClickListener() {
 
         mBtnOpenDaMai?.setOnClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW).apply {
-                addCategory(Intent.CATEGORY_LAUNCHER)
-                component = ComponentName("cn.damai", "cn.damai.homepage.MainActivity")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            })
+            try {
+                startActivity(Intent().apply {
+                    addCategory(Intent.CATEGORY_LAUNCHER)
+                    component = ComponentName("cn.damai", "cn.damai.homepage.MainActivity")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                })
+            } catch (e: Exception) {
+                Toast.makeText(Global.getContext(), "请手动打开大麦app", Toast.LENGTH_SHORT).show()
+            }
         }
 
         mBtnAddDate?.setOnClickListener {
