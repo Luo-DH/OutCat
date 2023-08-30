@@ -2,6 +2,7 @@ package com.cheat.outcat.service
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -60,7 +61,21 @@ class OutCatService : AccessibilityService() {
             startForeground(1, it)
         }
 
+        OutCatDataCenter.setClickListener(mStateChangeListener)
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        OutCatDataCenter.setClickListener(null)
+    }
+
+    private val mStateChangeListener: (start: Boolean) -> Unit= {
+        if (it) {
+            handleEntry(event = mLastEvent, currentPage)
+        }
+    }
+
 
     @Volatile
     private var currentPage = ""
@@ -70,64 +85,131 @@ class OutCatService : AccessibilityService() {
     // 上次点击的文案
     private var mLastClickText = ""
 
+    private var mLastEvent: AccessibilityEvent? = null
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         Log.i(TAG, "onAccessibilityEvent: ${event}")
-        if (!OutCatDataCenter.start) {
-            return
-        }
         event ?: return
+
+        mLastEvent = event
 
         if (event.eventType == TYPE_VIEW_CLICKED) {
             mLastClickText = event.text.toString()
         }
 
         if (event.eventType == TYPE_WINDOW_STATE_CHANGED) {
-            currentPage = event.className.toString()
-        }
+            // loading弹窗不记录
+            if (event.className != PAGE_SEARCH_LOADING_DIALOG) {
+                currentPage = event.className.toString()
 
-        when (event.className) {
-            PAGE_YUYUE -> {
-                val cast = measureTimeMillis {
-                    handleYuYue(event)
+                if (currentPage != mPage) {
+                    if (event.className == PAGE_YUYUE) {
+                        Log.i(TAG, "vansing mSelectYuYue重制")
+                        mSelectYuYue = false
+                    } else if (event.className == PAGE_SELECT) {
+                        Log.i(TAG, "vansing mSelectPrice重制")
+                        mSelectPrice = false
+                    }
                 }
-                Log.i(TAG, "vansing onAccessibilityEvent: handleYuYue:${cast}")
-            }
-
-            PAGE_SELECT -> {
-                val cast = measureTimeMillis {
-                    handleSelect(event)
-                }
-                Log.i(TAG, "vansing onAccessibilityEvent: handleSelect:${cast}")
-            }
-
-            PAGE_ORDER -> {
-                val cast = measureTimeMillis {
-                    handleOrder(event)
-                }
-                Log.i(TAG, "vansing onAccessibilityEvent: handleOrder:${cast}")
             }
         }
 
-        if (event.eventType == TYPE_WINDOW_STATE_CHANGED) {
+        if (!OutCatDataCenter.start) {
+            return
+        }
+
+        handleEntry(event)
+
+        if (event.eventType == TYPE_WINDOW_STATE_CHANGED && event.className != PAGE_SEARCH_LOADING_DIALOG) {
             mPage = event.className.toString()
         }
 
     }
 
+    // 是否点击了预约
+    private var mSelectYuYue = false
+    // 是否选择了价格
+    private var mSelectPrice = false
+
+
+    private fun handleEntry(event: AccessibilityEvent?, lastPage: String? = null) {
+        event ?: return
+        Log.i(TAG, "handleEntry: ${currentPage} ${event.contentChangeTypes} ${event}")
+        when (lastPage ?: event.className) {
+            "android.widget.FrameLayout" -> {
+                if (currentPage == PAGE_YUYUE) {
+                    if (mSelectYuYue) {
+                        Log.i(TAG, "vansing 已经点击过了预约")
+                        return
+                    }
+                    val cast = measureTimeMillis {
+                        mSelectYuYue = handleYuYue(event)
+                    }
+                    Log.i(TAG, "vansing onAccessibilityEvent: handleSelect:${cast}")
+                } else if (currentPage == PAGE_SELECT) {
+                    if (mSelectPrice) {
+                        Log.i(TAG, "vansing 已经选择了价格了")
+                        OutCatContextBase.getDefaultMainHandler().removeCallbacks(mRunnableClickBack)
+                        handleClickBuy(event)
+                        return
+                    } else {
+                        OutCatContextBase.getDefaultMainHandler().removeCallbacks(mRunnableClickBack)
+                        OutCatContextBase.getDefaultMainHandler().postDelayed(mRunnableClickBack, 200)
+                    }
+                    val cast = measureTimeMillis {
+                        mSelectPrice = handlePrice(event)
+                        if (mSelectPrice) {
+                            // 点击购买
+                            OutCatContextBase.getDefaultMainHandler().postDelayed({
+                                handleClickBuy(event)
+                            }, 100)
+                        }
+                    }
+                    Log.i(TAG, "vansing onAccessibilityEvent: handlePrice:${cast} ${mSelectPrice}")
+                } else if (currentPage == PAGE_ORDER) {
+                    handleOrder(event)
+                }
+            }
+            PAGE_YUYUE -> {
+//                val cast = measureTimeMillis {
+//                    handleYuYue(event)
+//                }
+//                Log.i(TAG, "vansing onAccessibilityEvent: handleYuYue:${cast}")
+            }
+
+
+
+            PAGE_ORDER -> {
+//                val cast = measureTimeMillis {
+//                    handleOrder(event)
+//                }
+//                Log.i(TAG, "vansing onAccessibilityEvent: handleOrder:${cast}")
+            }
+        }
+    }
+
+    private val mRunnableClickBack :()->Unit = {
+        var clickBackRes = false
+        val cast = measureTimeMillis {
+            clickBackRes = handleClickBack(mLastEvent!!)
+        }
+        Log.i(TAG, "vansing: cast:${cast} clickBack ${clickBackRes}")
+    }
+
 
     // 预约那个页面
-    private fun handleYuYue(event: AccessibilityEvent) {
+    private fun handleYuYue(event: AccessibilityEvent): Boolean {
+        Log.i(TAG, "vansing handleYuYue: ${Thread.currentThread().name}")
 
         // 不在当前页面直接return
         if (currentPage != PAGE_YUYUE) {
-            return
+            return false
         }
         // 预约抢票
-        getNodeById(event, ID_YUYUE).click() ||
+        return getNodeById(event, ID_YUYUE).click() ||
                 getNodeByName(event, "预约抢票").click() ||
                 getNodeByName(event, "立即购买").click() ||
                 getNodeByName(event, "立即预定").click()
-        return
 
     }
 
@@ -139,11 +221,11 @@ class OutCatService : AccessibilityService() {
         }
 
         // 上一个页面不是加载页面，直接return
-        if (mPage != PAGE_SELECT_LOADING_DIALOG &&
-            mPage != PAGE_SEARCH_LOADING_DIALOG && mPage != PAGE_YUYUE
-        ) {
-            return
-        }
+//        if (mPage != PAGE_SELECT_LOADING_DIALOG &&
+//            mPage != PAGE_SEARCH_LOADING_DIALOG && mPage != PAGE_YUYUE
+//        ) {
+//            return
+//        }
 
 
         // 1. 选择票价
@@ -163,12 +245,13 @@ class OutCatService : AccessibilityService() {
 
         // 2. 选择日期
         val selectedDate = handleDate(event)
+        Log.i(TAG, "handleSelect: selectedDate:${selectedDate} ${event}")
         if (selectedDate) {
             // 如果选上了日期，那么可以结束这次事件
             return
         } else {
             // 如果没有选上日期，考虑点击返回按钮，退出当前页面
-            handleClickBack(event)
+//            handleClickBack(event)
         }
 
     }
@@ -343,8 +426,8 @@ class OutCatService : AccessibilityService() {
                 (getNodeByName(event, "确定")).run { this.click() }
     }
 
-    private fun handleClickBack(event: AccessibilityEvent) {
-        getNodeById(event, ID_BACK).click()
+    private fun handleClickBack(event: AccessibilityEvent): Boolean {
+        return getNodeById(event, ID_BACK).click()
     }
 
     /**

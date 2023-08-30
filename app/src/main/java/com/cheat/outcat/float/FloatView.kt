@@ -57,7 +57,7 @@ class FloatView @JvmOverloads constructor(
     private fun initClickListener() {
         mTvSwitch?.setOnClickListener {
             OutCatDataCenter.start = !OutCatDataCenter.start
-            OutCatDataCenter.mListener?.invoke()
+            OutCatDataCenter.mListener?.invoke(OutCatDataCenter.start)
             if (OutCatDataCenter.start) {
                 mTvSwitch?.text = "点击停止"
             } else {
